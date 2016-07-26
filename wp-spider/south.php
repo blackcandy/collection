@@ -27,6 +27,10 @@ class Collection
      * @return String $web         获取到页面内容
      */
 	function open(){
+		if($this->check($this->url)){
+			echo '<span style="color:red;">this web has collected!</span>';
+			die;
+		}
 		$web = file_get_contents($this->url);
 		return $web;
 	}
@@ -90,9 +94,10 @@ class Collection
 				echo '<br><span style="color:red;">insert failed!</span><br>';
 			}
 		}
-	mysql_close($con);
-	$this->write($this->url);
-	return true;	
+		mysql_close($con);
+		if($this->write($this->url)){
+			echo '<span style="color:green;">completed!</span>';
+		}	
 	}
 	/**
 	 * 图片路径修正
@@ -125,20 +130,39 @@ class Collection
 		return $guid[$i];
 	}
 	/**
+	 * 检查是否采集过页面
+	 * @param String $url           采集网站url
+     * @return Boole                返回是否采集过该url
+     */
+	function check($url){
+		$txt = file_get_contents('./record.txt');
+		$checked = explode("\r\n", $txt);
+		if(in_array($url, $checked)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	/**
 	 * 记录采集过的页面
 	 * @param String $url           采集网站url
-     * @return String $guid[$i]     返回生成的guid
+     * @return Boole true           返回处理完毕
      */
 	function write($url){
 		$handle = fopen('./record.txt', "a");
-		fwrite($handle, "\r\n".$url.";");
-		fclose($handle);
+		if(fwrite($handle, "\r\n".$url)){
+			fclose($handle);
+			return true;
+		}	
 	}
 }
 
-$url = "http://rumen.southmoney.com/Kxian/Kxianzuhe/";
-$category = 20;//"k线组合图解";
-
-$test = new Collection($url, $category);
-$test->get();
+/**
+ * 获取数据
+ * @param String $_POST              post过来的数据
+ */
+$url = $_POST['url'];
+$category = $_POST['category'];
+$run = new Collection($url, $category);
+$run->get();
 ?>
