@@ -28,7 +28,8 @@ class Collection
      */
 	function open(){
 		if($this->check($this->url)){
-			echo '<span style="color:red;">this web has collected!</span>';
+			echo '<span style="color:red;">this web has collected!</span><br>
+				  <a href="./form.php">back</a>';
 			die;
 		}
 		$web = file_get_contents($this->url);
@@ -96,7 +97,13 @@ class Collection
 		}
 		mysql_close($con);
 		if($this->write($this->url)){
-			echo '<span style="color:green;">completed!</span>';
+			echo '<span style="color:green;">completed!</span><br><br>
+				  <a href="./form.php">back</a><br><br>
+				  <form action="" method="post">
+					NEXT-URL:<input type="hidden" name="url" value="'.$this->next().'"><a href="'.$this->next().'">'.$this->next().'</a>
+					Category:<input type="hidden" name="category" value="'.$this->category.'">'.$this->category.'<br>
+					<button type="submit">next</button>
+				  </form>';
 		}	
 	}
 	/**
@@ -155,14 +162,24 @@ class Collection
 			return true;
 		}	
 	}
+	/**
+	 * 获取下一个页面
+	 * @param String $url           采集网站url
+     * @return Boole true           返回处理完毕
+     */
+	function next(){
+		$web = file_get_contents($this->url);
+		$preg = '/<font\scolor="FF0000">(.*?)<\/font>\s*<a\shref="(.*?)">.*?<\/a>/';
+		preg_match_all($preg, $web, $next);
+		$next_url = 'http://rumen.southmoney.com'.$next[2][0];
+		return $next_url;
+	}
 }
 
 /**
  * 获取数据
  * @param String $_POST              post过来的数据
  */
-$url = $_POST['url'];
-$category = $_POST['category'];
-$run = new Collection($url, $category);
+$run = new Collection($_POST['url'], $_POST['category']);
 $run->get();
 ?>
